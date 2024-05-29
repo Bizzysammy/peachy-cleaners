@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "656805629314",
+    "project_id": "peachy-cleaners",
+    "storage_bucket": "peachy-cleaners.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:656805629314:android:9d8bff1787e0ba7728139b",
+        "android_client_info": {
+          "package_name": "com.example.peachy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_e0IHGXMfQsaVYsYYGZAvFQAmIpZCjyM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
