@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:peachy/Customer/customerbottomnav.dart';
+import 'package:peachy/Customer/customerlogout.dart';
 import 'package:peachy/Customer/customerprofilesettings.dart';
-import 'package:peachy/logoutscreen.dart';
+import 'package:peachy/Customer/mapdialogue.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+
 
 class customerhomepage extends StatefulWidget {
   const customerhomepage({Key? key}) : super(key: key);
@@ -11,10 +18,36 @@ class customerhomepage extends StatefulWidget {
 }
 
 class customerhomepageState extends State<customerhomepage> {
-  List<String> paymentMethod = ['VISA CARD', 'CASH', 'MOBILE MONEY'];
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  User? currentUser;
+  String? userName;
+  String? userProfilePicture;
+  String? userPhoneNumber;
+
+  String googleapikey = "AIzaSyDnb1EkL1xnwo9eqmC7dL4WajsqOF23gpM";
+
+  Future<void> _getCurrentLocation(BuildContext context) async {
+    final hasPermission = await _handleLocationPermission(context);
+    if (!hasPermission) return;
+    final Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+    final String location = '${position.latitude}, ${position.longitude}';
+    _locationController.text = location;
+  }
+
+  List<String> paymentMethod = ['VISA CARD', 'MOBILE MONEY', 'CASH'];
   String? payment;
 
-  List<String> cleaningCategory = ['One Bed Room', 'Two Bed Room', 'Three Bed Room'];
+  List<String> cleaningCategory = [
+    'One Bed Room',
+    'Two Bed Room',
+    'Three Bed Room',
+    'Offices',
+    'Sites',
+    'Others'
+  ];
   String? category;
 
   List<String> cleaningSites = [
@@ -34,11 +67,56 @@ class customerhomepageState extends State<customerhomepage> {
   final TextEditingController _locationController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _loadUserdata();
+    _loadUserProfilePicture();
+  }
+
+  Future<void> _loadUserdata() async {
+    currentUser = _auth.currentUser;
+
+    if (currentUser != null) {
+      final DocumentSnapshot userDoc = await _firestore.collection('Customers').doc(currentUser!.uid).get();
+
+      if (userDoc.exists) {
+        setState(() {
+          userName = userDoc['name'] ?? 'No Name';
+          userPhoneNumber = userDoc['phoneNumber'] ?? 'No Phone Number';
+        });
+        print('User name loaded: $userName');
+      } else {
+        print('User document does not exist.');
+      }
+    } else {
+      print('No user is logged in.');
+    }
+  }
+
+  Future<void> _loadUserProfilePicture() async {
+    currentUser = _auth.currentUser;
+
+    if (currentUser != null) {
+      final DocumentSnapshot userDoc = await _firestore.collection('Customers').doc(currentUser!.uid).get();
+
+      if (userDoc.exists) {
+        setState(() {
+          userProfilePicture = userDoc['profile_photo'] ?? 'https://example.com/default-profile-picture.png';
+        });
+        print('User profile picture loaded: $userProfilePicture');
+      } else {
+        print('User document does not exist.');
+      }
+    } else {
+      print('No user is logged in.');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
 
     return Scaffold(
-
       bottomNavigationBar: const Customerbottomnav(),
       body: SafeArea(
         child: Column(
@@ -72,38 +150,46 @@ class customerhomepageState extends State<customerhomepage> {
                               onTap: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => const Logout()),
+                                  MaterialPageRoute(
+                                      builder: (context) => const customerlogout()),
                                 );
                                 // Handle menu icon tap
                               },
                               child: const Padding(
                                 padding: EdgeInsets.all(8.0),
-                                child: Icon(Icons.menu, color: Color(0xFFF9C4B4), size: 30),
+                                child: Icon(Icons.menu,
+                                    color: Color(0xFFF9C4B4), size: 30),
                               ),
                             ),
-                            const CircleAvatar(
+                            CircleAvatar(
                               radius: 40,
-                              backgroundImage: AssetImage('assets/person.jpg'),
+                              backgroundImage: userProfilePicture != null
+                                  ? NetworkImage(userProfilePicture!)
+                                  : const AssetImage('assets/person.jpg')
+                              as ImageProvider,
                             ),
                             GestureDetector(
                               onTap: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => const customerprofilesetting()),
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                      const customerprofilesetting()),
                                 );
                                 // Handle settings icon tap
                               },
                               child: const Padding(
                                 padding: EdgeInsets.all(8.0),
-                                child: Icon(Icons.settings, color: Color(0xFFF9C4B4), size: 30),
+                                child: Icon(Icons.settings,
+                                    color: Color(0xFFF9C4B4), size: 30),
                               ),
                             ),
                           ],
                         ),
                         SizedBox(height: size.height * 0.01),
-                        const Text(
-                          "Customer Name",
-                          style: TextStyle(
+                        Text(
+                          userName ?? "Customer Name",
+                          style: const TextStyle(
                             color: Color(0xFFF9C4B4),
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -128,14 +214,12 @@ class customerhomepageState extends State<customerhomepage> {
             Expanded(
               child: Stack(
                 children: [
-                  // Background image
                   Positioned.fill(
                     child: Image.asset(
                       'assets/back.jpg',
                       fit: BoxFit.cover,
                     ),
                   ),
-                  // Main content
                   SingleChildScrollView(
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -158,9 +242,11 @@ class customerhomepageState extends State<customerhomepage> {
                               value: category,
                               decoration: const InputDecoration(
                                 labelText: 'Room category',
-                                prefixIcon: Icon(Icons.house, color: Color(0xFF111217)),
+                                prefixIcon:
+                                Icon(Icons.house, color: Color(0xFF111217)),
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  borderRadius:
+                                  BorderRadius.all(Radius.circular(10)),
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
@@ -184,9 +270,11 @@ class customerhomepageState extends State<customerhomepage> {
                               value: sites,
                               decoration: const InputDecoration(
                                 labelText: 'Cleaning options',
-                                prefixIcon: Icon(Icons.clean_hands_rounded, color: Color(0xFF111217)),
+                                prefixIcon: Icon(Icons.clean_hands_rounded,
+                                    color: Color(0xFF111217)),
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  borderRadius:
+                                  BorderRadius.all(Radius.circular(10)),
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
@@ -199,9 +287,11 @@ class customerhomepageState extends State<customerhomepage> {
                               controller: _placeController,
                               decoration: const InputDecoration(
                                 labelText: 'Place',
-                                prefixIcon: Icon(Icons.location_city_rounded, color: Color(0xFF111217)),
+                                prefixIcon: Icon(Icons.location_city_rounded,
+                                    color: Color(0xFF111217)),
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  borderRadius:
+                                  BorderRadius.all(Radius.circular(10)),
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
@@ -212,77 +302,101 @@ class customerhomepageState extends State<customerhomepage> {
                             padding: const EdgeInsets.all(3),
                             child: TextField(
                               controller: _locationController,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 labelText: 'Location',
-                                prefixIcon: Icon(Icons.place, color: Color(0xFF111217)),
-                                border: OutlineInputBorder(
+                                prefixIcon: const Icon(Icons.place, color: Color(0xFF111217)),
+                                border: const OutlineInputBorder(
                                   borderRadius: BorderRadius.all(Radius.circular(10)),
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
+                                suffixIcon: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.my_location),
+                                      onPressed: () async {
+                                        await _getCurrentLocation(context);
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.map),
+                                      onPressed: () {
+                                        _showMapDialog(context);
+                                      },
+                                    ),
+                                  ],
+                                ),
                               ),
-                              onTap: () {},
+                              readOnly: true,
                             ),
                           ),
                           Padding(
                             padding: const EdgeInsets.all(3),
-                            child: TextFormField(
+                            child: TextField(
                               controller: _dateController,
                               decoration: const InputDecoration(
                                 labelText: 'Date',
-                                prefixIcon: Icon(Icons.date_range, color: Color(0xFF111217)),
+                                prefixIcon: Icon(Icons.calendar_today_rounded,
+                                    color: Color(0xFF111217)),
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  borderRadius:
+                                  BorderRadius.all(Radius.circular(10)),
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
+                                suffixIcon: Icon(Icons.calendar_month),
                               ),
-                              onTap: () {
-                                showDatePicker(
+                              readOnly: true,
+                              onTap: () async {
+                                DateTime? selectedDate = await showDatePicker(
                                   context: context,
                                   initialDate: DateTime.now(),
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime(2101),
-                                ).then((selectedDate) {
-                                  if (selectedDate != null) {
-                                    _dateController.text = selectedDate.toString();
-                                  }
-                                });
+                                  firstDate: DateTime.now(),
+                                  lastDate: DateTime(2100),
+                                );
+                                if (selectedDate != null) {
+                                  _dateController.text =
+                                  selectedDate.toLocal().toString().split(' ')[0];
+                                }
                               },
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.all(4),
-                            child: TextFormField(
+                            padding: const EdgeInsets.all(3),
+                            child: TextField(
                               controller: _timeController,
                               decoration: const InputDecoration(
                                 labelText: 'Time',
-                                prefixIcon: Icon(Icons.access_time, color: Color(0xFF111217)),
+                                prefixIcon: Icon(Icons.timer,
+                                    color: Color(0xFF111217)),
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.all(Radius.circular(14)),
+                                  borderRadius:
+                                  BorderRadius.all(Radius.circular(10)),
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
+                                suffixIcon: Icon(Icons.timer),
                               ),
-                              onTap: () {
-                                showTimePicker(
+                              readOnly: true,
+                              onTap: () async {
+                                TimeOfDay? selectedTime = await showTimePicker(
                                   context: context,
                                   initialTime: TimeOfDay.now(),
-                                ).then((selectedTime) {
-                                  if (selectedTime != null) {
-                                    _timeController.text = selectedTime.format(context);
-                                  }
-                                });
+                                );
+                                if (selectedTime != null) {
+                                  _timeController.text = selectedTime.format(context);
+                                }
                               },
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.all(4),
+                            padding: const EdgeInsets.all(3),
                             child: DropdownButtonFormField<String>(
-                              items: paymentMethod.map((String payment) {
+                              items: paymentMethod.map((String method) {
                                 return DropdownMenuItem<String>(
-                                  value: payment,
-                                  child: Text(payment),
+                                  value: method,
+                                  child: Text(method),
                                 );
                               }).toList(),
                               onChanged: (String? value) {
@@ -292,10 +406,12 @@ class customerhomepageState extends State<customerhomepage> {
                               },
                               value: payment,
                               decoration: const InputDecoration(
-                                labelText: 'Payment Method',
-                                prefixIcon: Icon(Icons.money, color: Color(0xFF111217)),
+                                labelText: 'Payment method',
+                                prefixIcon: Icon(Icons.payment,
+                                    color: Color(0xFF111217)),
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.all(Radius.circular(14)),
+                                  borderRadius:
+                                  BorderRadius.all(Radius.circular(10)),
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
@@ -310,7 +426,89 @@ class customerhomepageState extends State<customerhomepage> {
                                 backgroundColor: const Color(0xFFF9C4B4),
                                 minimumSize: const Size(200, 50),
                               ),
-                              onPressed: () async {},
+                              onPressed: () async {
+                                final String place = _placeController.text;
+                                final String location = _locationController.text;
+                                final String time = _timeController.text;
+                                final String date = _dateController.text;
+
+                                if (place.isEmpty ||
+                                    location.isEmpty ||
+                                    time.isEmpty ||
+                                    date.isEmpty ||
+                                    payment == null ||
+                                    category == null ||
+                                    sites == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Please fill all the fields')),
+                                  );
+                                  return;
+                                }
+
+                                if (currentUser == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('User is not authenticated')),
+                                  );
+                                  return;
+                                }
+
+                                final userQuery = _firestore
+                                    .collection('Customers')
+                                    .where('uid', isEqualTo: currentUser!.uid)
+                                    .limit(1);
+
+                                final userQuerySnapshot = await userQuery.get();
+
+                                if (userQuerySnapshot.docs.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Customer does not exist')),
+                                  );
+                                  return;
+                                }
+
+                                final userDocRef = userQuerySnapshot.docs[0].reference;
+
+                                final userData = userQuerySnapshot.docs[0].data();
+                                final int currentOrderCount = userData['orderCount'] ?? 0;
+                                final int nextOrderCount = currentOrderCount + 1;
+
+                                final orderData = {
+                                  'place': place,
+                                  'location': location,
+                                  'paymentmethod': payment,
+                                  'time': time,
+                                  'date': date,
+                                  'category': category,
+                                  'sites': sites,
+                                  'name': userName,
+                                  'phoneNumber': userPhoneNumber,
+                                };
+
+                                userDocRef
+                                    .collection('myorders')
+                                    .doc('my order $nextOrderCount')
+                                    .set(orderData)
+                                    .then((_) {
+                                  _placeController.clear();
+                                  _locationController.clear();
+                                  _timeController.clear();
+                                  _dateController.clear();
+                                  payment = null;
+                                  category = null;
+                                  sites = null;
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Order saved successfully')),
+                                  );
+
+                                  userDocRef.update({'orderCount': nextOrderCount});
+                                }).catchError((e) {
+                                  print('Error making order: $e');
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Failed to save order')),
+                                  );
+                                });
+                              },
                               child: const Text('Book Now'),
                             ),
                           ),
@@ -325,6 +523,59 @@ class customerhomepageState extends State<customerhomepage> {
         ),
       ),
     );
+  }
+
+  Future<void> _showMapDialog(BuildContext context) async {
+    LatLng? selectedLocation = await showDialog<LatLng>(
+      context: context,
+      builder: (BuildContext context) {
+        return const MapDialog(
+          initialPosition: LatLng(37.7749, -122.4194), // Replace with default position if necessary
+        );
+      },
+    );
+
+    if (selectedLocation != null) {
+      setState(() {
+        _locationController.text =
+        '${selectedLocation.latitude}, ${selectedLocation.longitude}';
+      });
+    }
+  }
+
+
+  Future<bool> _handleLocationPermission(BuildContext context) async {
+    LocationPermission permission;
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Location services are disabled. Please enable the services'),
+        ),
+      );
+      return false;
+    }
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location permissions are denied'),
+          ),
+        );
+        return false;
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Location permissions are permanently denied, we cannot request permissions.'),
+        ),
+      );
+      return false;
+    }
+    return true;
   }
 }
 

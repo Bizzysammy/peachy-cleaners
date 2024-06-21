@@ -1,23 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:peachy/Admin/adminbottomnav.dart';
-
+import 'package:peachy/Admin/admincleanerorders.dart';
+import 'package:peachy/Admin/admincustomerorders.dart';
 
 class adminmyorders extends StatefulWidget {
   const adminmyorders({Key? key}) : super(key: key);
-  static const String id = 'customermyorders';
+  static const String id = 'adminmyorders';
 
   @override
   State<adminmyorders> createState() => adminmyordersState();
 }
 
 class adminmyordersState extends State<adminmyorders> {
-
-  List<String> paymentmethod = ['VISA CARD', 'CASH', 'MOBILE MONEY'];
-  String? payment;
-
-
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,7 +37,56 @@ class adminmyordersState extends State<adminmyorders> {
         ),
       ),
       bottomNavigationBar: const adminbottomnav(),
-
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const admincustomerorders(),
+                  ),
+                );
+                // Add your onPressed code here!
+              },
+              icon: const Icon(Icons.people, color: Color(0xFFF9C4B4)),
+              label: const Text(
+                'Customer Orders',
+                style: TextStyle(color: Color(0xFFF9C4B4)),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF111217),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const admincleanersorders(),
+                  ),
+                ); // Add your onPressed code here!
+              },
+              icon: const Icon(Icons.cleaning_services, color: Color(0xFFF9C4B4)),
+              label: const Text(
+                'Cleaners Orders',
+                style: TextStyle(color: Color(0xFFF9C4B4)),
+              ),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF111217),// Button color
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

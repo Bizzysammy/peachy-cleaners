@@ -91,7 +91,7 @@ class AdminHomePageState extends State<AdminHomePage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const adminviewreports(),
+                                    builder: (context) => const AdminViewReports(),
                                   ),
                                 );
                                 // Handle settings icon tap
@@ -182,7 +182,7 @@ class AdminHomePageState extends State<AdminHomePage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const customermessages(),
+                          builder: (context) => const AdminCustomerMessages(),
                         ),
                       );
                     },
@@ -194,7 +194,7 @@ class AdminHomePageState extends State<AdminHomePage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const admincleanersmessages(),
+                          builder: (context) => const AdminCleanersMessages(),
                         ),
                       );
                     },

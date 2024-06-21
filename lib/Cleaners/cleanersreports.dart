@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:peachy/Cleaners/cleanersbottomnav.dart';
 import 'package:peachy/Cleaners/cleanershomescreen.dart';
+import 'package:peachy/cleaner_auth_provider.dart';
 
 class CleanerReports extends StatefulWidget {
   @override
@@ -8,51 +12,88 @@ class CleanerReports extends StatefulWidget {
 }
 
 class CleanerReportsState extends State<CleanerReports> {
-  TextEditingController cleanername = TextEditingController();
-  TextEditingController dayofcleaning = TextEditingController();
-  TextEditingController dateofcleaning = TextEditingController();
-  TextEditingController customername = TextEditingController();
-  TextEditingController numberofrooms = TextEditingController();
-  TextEditingController customeraddress = TextEditingController();
-  TextEditingController totalcashcollection = TextEditingController();
-  TextEditingController totalvisacollection = TextEditingController();
-  TextEditingController totalmobilemoneycollection = TextEditingController();
-  TextEditingController totalcollection = TextEditingController();
+  TextEditingController cleanernameController = TextEditingController();
+  TextEditingController dayofcleaningController = TextEditingController();
+  TextEditingController dateofcleaningController = TextEditingController();
+  TextEditingController customernameController = TextEditingController();
+  TextEditingController numberofroomsController = TextEditingController();
+  TextEditingController customeraddressController = TextEditingController();
+  TextEditingController totalcashcollectionController = TextEditingController();
+  TextEditingController totalvisacollectionController = TextEditingController();
+  TextEditingController totalmobilemoneycollectionController = TextEditingController();
+  TextEditingController totalcollectionController = TextEditingController();
+
+  String? cleanerProfilePhotoURL; // To store the profile photo URL
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void initState() {
     super.initState();
-    totalcashcollection.addListener(_updateTotalCollection);
-    totalvisacollection.addListener(_updateTotalCollection);
-    totalmobilemoneycollection.addListener(_updateTotalCollection);
+    totalcashcollectionController.addListener(_updateTotalCollection);
+    totalvisacollectionController.addListener(_updateTotalCollection);
+    totalmobilemoneycollectionController.addListener(_updateTotalCollection);
+
+    // Fetch the cleaner name and profile photo URL in initState
+    final cleanerAuthProvider = Provider.of<CleanerAuthProvider>(context, listen: false);
+    cleanerAuthProvider.getCleanerName().then((cleanerName) {
+      setState(() {
+        cleanernameController.text = cleanerName;
+      });
+      _loadUserProfilePicture(cleanerName);
+    });
+  }
+
+  Future<void> _loadUserProfilePicture(String cleanerName) async {
+    try {
+      final QuerySnapshot querySnapshot = await _firestore
+          .collection('Cleaners')
+          .where('name', isEqualTo: cleanerName)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final DocumentSnapshot userDoc = querySnapshot.docs.first;
+        setState(() {
+          cleanerProfilePhotoURL = userDoc['profile_photo'] ?? 'https://example.com/default-profile-picture.png';
+        });
+        print('User profile picture loaded: $cleanerProfilePhotoURL');
+      } else {
+        print('No matching cleaner found.');
+      }
+    } catch (error) {
+      print('Error fetching profile photo: $error');
+    }
   }
 
   @override
   void dispose() {
-    totalcashcollection.removeListener(_updateTotalCollection);
-    totalvisacollection.removeListener(_updateTotalCollection);
-    totalmobilemoneycollection.removeListener(_updateTotalCollection);
-    totalcashcollection.dispose();
-    totalvisacollection.dispose();
-    totalmobilemoneycollection.dispose();
-    totalcollection.dispose();
+    totalcashcollectionController.removeListener(_updateTotalCollection);
+    totalvisacollectionController.removeListener(_updateTotalCollection);
+    totalmobilemoneycollectionController.removeListener(_updateTotalCollection);
+    totalcashcollectionController.dispose();
+    totalvisacollectionController.dispose();
+    totalmobilemoneycollectionController.dispose();
+    totalcollectionController.dispose();
     super.dispose();
   }
 
   void _updateTotalCollection() {
-    double cash = double.tryParse(totalcashcollection.text) ?? 0.0;
-    double visa = double.tryParse(totalvisacollection.text) ?? 0.0;
-    double mobileMoney = double.tryParse(totalmobilemoneycollection.text) ?? 0.0;
+    double cash = double.tryParse(totalcashcollectionController.text) ?? 0.0;
+    double visa = double.tryParse(totalvisacollectionController.text) ?? 0.0;
+    double mobileMoney = double.tryParse(totalmobilemoneycollectionController.text) ?? 0.0;
     double total = cash + visa + mobileMoney;
 
-    totalcollection.text = total.toStringAsFixed(2);
+    totalcollectionController.text = total.toStringAsFixed(2);
   }
 
   @override
   Widget build(BuildContext context) {
+    final cleanerAuthProvider = Provider.of<CleanerAuthProvider>(context);
+
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(kToolbarHeight),
+        preferredSize: const Size.fromHeight(kToolbarHeight),
         child: AppBar(
           flexibleSpace: Container(
             decoration: const BoxDecoration(
@@ -80,26 +121,30 @@ class CleanerReportsState extends State<CleanerReports> {
             MaterialButton(
               onPressed: () {
                 Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => CleanersHomePage()));
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const CleanersHomePage(),
+                  ),
+                );
               },
-              child: Text(
+              child: const Text(
                 "Back",
                 style: TextStyle(
                   fontSize: 20,
-                  color: const Color(0xFFF9C4B4),
+                  color: Color(0xFFF9C4B4),
                 ),
               ),
             ),
             MaterialButton(
-              onPressed: () {
-                // Handle save action
+              onPressed: () async {
+                String cleanerName = await cleanerAuthProvider.getCleanerName();
+                _saveReport(cleanerName);
               },
-              child: Text(
+              child: const Text(
                 "Save",
                 style: TextStyle(
                   fontSize: 20,
-                  color: const Color(0xFFF9C4B4),
+                  color: Color(0xFFF9C4B4),
                 ),
               ),
             ),
@@ -112,41 +157,60 @@ class CleanerReportsState extends State<CleanerReports> {
           padding: const EdgeInsets.all(10),
           child: Column(
             children: [
-              _buildTextField(controller: cleanername, hintText: 'Cleaner Name'),
-              SizedBox(height: 11),
-              _buildTextField(controller: dayofcleaning, hintText: 'Day of Cleaning'),
-              SizedBox(height: 11),
-              _buildTextField(controller: dateofcleaning, hintText: 'Date of Cleaning'),
-              SizedBox(height: 11),
-              _buildTextField(controller: customername, hintText: 'Customer Name'),
-              SizedBox(height: 11),
-              _buildTextField(controller: numberofrooms, hintText: 'Number of Rooms'),
-              SizedBox(height: 11),
-              _buildTextField(controller: customeraddress, hintText: 'Customer Address'),
-              SizedBox(height: 11),
               _buildTextField(
-                controller: totalcashcollection,
+                controller: cleanernameController,
+                hintText: 'Cleaner Name',
+                enabled: false,
+              ),
+              const SizedBox(height: 11),
+              _buildTextField(
+                controller: dayofcleaningController,
+                hintText: 'Day of Cleaning',
+              ),
+              const SizedBox(height: 11),
+              _buildTextField(
+                controller: dateofcleaningController,
+                hintText: 'Date of Cleaning',
+              ),
+              const SizedBox(height: 11),
+              _buildTextField(
+                controller: customernameController,
+                hintText: 'Customer Name',
+              ),
+              const SizedBox(height: 11),
+              _buildTextField(
+                controller: numberofroomsController,
+                hintText: 'Number of Rooms',
+              ),
+              const SizedBox(height: 11),
+              _buildTextField(
+                controller: customeraddressController,
+                hintText: 'Customer Address',
+              ),
+              const SizedBox(height: 11),
+              _buildTextField(
+                controller: totalcashcollectionController,
                 hintText: 'Total Cash Collection',
                 keyboardType: TextInputType.number,
               ),
-              SizedBox(height: 11),
+              const SizedBox(height: 11),
               _buildTextField(
-                controller: totalvisacollection,
+                controller: totalvisacollectionController,
                 hintText: 'Total Visa Collection',
                 keyboardType: TextInputType.number,
               ),
-              SizedBox(height: 11),
+              const SizedBox(height: 11),
               _buildTextField(
-                controller: totalmobilemoneycollection,
+                controller: totalmobilemoneycollectionController,
                 hintText: 'Total MobileMoney Collection',
                 keyboardType: TextInputType.number,
               ),
-              SizedBox(height: 11),
+              const SizedBox(height: 11),
               _buildTextField(
-                controller: totalcollection,
+                controller: totalcollectionController,
                 hintText: 'Total Collection',
                 keyboardType: TextInputType.number,
-
+                enabled: false,
               ),
             ],
           ),
@@ -160,6 +224,7 @@ class CleanerReportsState extends State<CleanerReports> {
     required String hintText,
     TextInputType keyboardType = TextInputType.text,
     bool enabled = true,
+    // Remove initialValue as it's handled in initState
   }) {
     return Container(
       child: TextField(
@@ -168,11 +233,74 @@ class CleanerReportsState extends State<CleanerReports> {
         enabled: enabled,
         decoration: InputDecoration(
           hintText: hintText,
-          border: OutlineInputBorder(
+          border: const OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(20)),
           ),
         ),
       ),
     );
+  }
+
+  void _saveReport(String cleanerName) async {
+    try {
+      // Get current user
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated.');
+      }
+
+      // Create a reference to the Firestore database
+      final firestore = FirebaseFirestore.instance;
+
+      // Prepare data to save
+      Map<String, dynamic> reportData = {
+        'cleanername': cleanerName,
+        'dayofcleaning': dayofcleaningController.text,
+        'dateofcleaning': dateofcleaningController.text,
+        'customername': customernameController.text,
+        'numberofrooms': numberofroomsController.text,
+        'customeraddress': customeraddressController.text,
+        'totalcashcollection': double.tryParse(totalcashcollectionController.text) ?? 0.0,
+        'totalvisacollection': double.tryParse(totalvisacollectionController.text) ?? 0.0,
+        'totalmobilemoneycollection': double.tryParse(totalmobilemoneycollectionController.text) ?? 0.0,
+        'totalcollection': double.tryParse(totalcollectionController.text) ?? 0.0,
+        'timestamp': FieldValue.serverTimestamp(),
+        'profile_photo': cleanerProfilePhotoURL, // Store the photo URL
+      };
+
+      // Save report to Firestore
+      await firestore.collection('reports').doc(user.uid).collection('user_reports').add(reportData);
+
+      // Clear text field controllers
+      dayofcleaningController.clear();
+      dateofcleaningController.clear();
+      customernameController.clear();
+      numberofroomsController.clear();
+      customeraddressController.clear();
+      totalcashcollectionController.clear();
+      totalvisacollectionController.clear();
+      totalmobilemoneycollectionController.clear();
+      totalcollectionController.clear();
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Report saved successfully.'),
+          duration: Duration(seconds: 2), // Adjust duration as needed
+        ),
+      );
+
+      // Navigate back to Home or do any other post-save actions
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const CleanersHomePage()));
+    } catch (error) {
+      print('Error saving report: $error');
+      // Handle error accordingly, e.g., show a snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to save report. Please try again later.'),
+          duration: Duration(seconds: 2), // Adjust duration as needed
+        ),
+      );
+    }
   }
 }

@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:peachy/cleaners/cleanerslogin.dart';
@@ -17,6 +19,66 @@ class cleanerssignupState extends State<cleanerssignup> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+
+  void register(BuildContext context) async {
+    // Get the values from the form fields
+    String name = _nameController.text;
+    String cleanerID = _cleanerIDController.text;
+    String phoneNumber = _phoneNumberController.text;
+    String email = _emailController.text;
+    String password = _passwordController.text;
+    String confirmPassword = _confirmPasswordController.text;
+
+    // Validate the form fields
+    if (name.isEmpty ||
+        cleanerID.isEmpty ||
+        phoneNumber.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
+      _showErrorSnackBar(context, 'All fields are required');
+      return;
+    }
+
+    if (password != confirmPassword) {
+      _showErrorSnackBar(context, 'Passwords do not match');
+      return;
+    }
+
+    try {
+      // Create a new user in Firebase Authentication
+      UserCredential customerCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
+
+      // Save user data to Firebase Firestore
+      await FirebaseFirestore.instance
+          .collection('Cleaners')
+          .doc(customerCredential.user!.uid)
+          .set({
+        'name': name,
+        'CleanerID': cleanerID,
+        'phoneNumber': phoneNumber,
+        'email': email,
+      });
+
+      // Navigate to the login page or any other destination
+      // Here, we are assuming there's a `LoginScreen` widget defined
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) =>  CleanersLogin()),
+      );
+    } catch (e) {
+      _showErrorSnackBar(context, 'Registration failed: $e');
+    }
+  }
+
+  void _showErrorSnackBar(BuildContext context, String message) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.red,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -246,7 +308,7 @@ class cleanerssignupState extends State<cleanerssignup> {
                               Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const cleanerslogin(),
+                                  builder: (context) => CleanersLogin(),
                                 ),
                                     (route) => false,
                               );
@@ -283,11 +345,7 @@ class cleanerssignupState extends State<cleanerssignup> {
                           SizedBox(width: size.width * 0.02),
                           ElevatedButton(
                             onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const cleanerslogin()),
-                              );
+                              register(context);
                               // Handle signup logic here
                             },
                             style: ElevatedButton.styleFrom(
@@ -335,7 +393,7 @@ class cleanerssignupState extends State<cleanerssignup> {
                                   Navigator.pushAndRemoveUntil(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => const cleanerslogin(),
+                                      builder: (context) =>  CleanersLogin(),
                                     ),
                                         (route) => false,
                                   );

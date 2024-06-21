@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:peachy/Customer/customerhomepage.dart';
 import 'package:peachy/Customer/livestream.dart';
 import 'package:peachy/Customer/myorders.dart';
-import 'package:peachy/Customer/notification.dart';
-
+import 'package:peachy/Customer/messages.dart';
 
 class Customerbottomnav extends StatefulWidget {
-  const Customerbottomnav({Key? key}) : super(key: key);
+
+
+  const Customerbottomnav({Key? key, }) : super(key: key);
 
   @override
   CustomerbottomnavState createState() => CustomerbottomnavState();
@@ -26,34 +27,34 @@ class CustomerbottomnavState extends State<Customerbottomnav> {
   void _navigateToScreen(int index) {
     switch (index) {
       case 0:
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const customerhomepage(),
+            builder: (context) => const customerhomepage( ), // Pass currentUser
           ),
         );
         break;
       case 1:
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const customermyorders(),
+            builder: (context) => const customermyorders(), // Pass currentUser
           ),
         );
         break;
       case 2:
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const customerlivestream(),
+            builder: (context) => const customerlivestream(), // Pass currentUser
           ),
         );
         break;
       case 3:
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const customernotification(),
+            builder: (context) => const CustomerMessages(), // Pass currentUser
           ),
         );
         break;
@@ -82,8 +83,8 @@ class CustomerbottomnavState extends State<Customerbottomnav> {
         ),
       ],
       currentIndex: _selectedIndex,
-      selectedItemColor: Color(0xFFF9C4B4),
-      unselectedItemColor: Color(0xFFF9C4B4),
+      selectedItemColor: const Color(0xFFF9C4B4),
+      unselectedItemColor: const Color(0xFFF9C4B4),
       backgroundColor: Colors.white,
       onTap: _onItemTapped,
     );

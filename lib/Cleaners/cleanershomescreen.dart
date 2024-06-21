@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:peachy/Cleaners/cleanergolivescreen.dart';
 import 'package:peachy/Cleaners/cleanersbottomnav.dart';
 import 'package:peachy/Cleaners/cleanersmessages.dart';
@@ -15,6 +17,60 @@ class CleanersHomePage extends StatefulWidget {
 }
 
 class CleanersHomePageState extends State<CleanersHomePage> {
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  User? currentUser;
+  String? userName;
+  String? userProfilePicture;
+  String? cleanerID;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+    _loadUserProfilePicture();
+  }
+
+  Future<void> _loadUserData() async {
+    currentUser = _auth.currentUser;
+
+    if (currentUser != null) {
+      final DocumentSnapshot userDoc = await _firestore.collection('Cleaners').doc(currentUser!.uid).get();
+
+      if (userDoc.exists) {
+        setState(() {
+          userName = userDoc['name'] ?? 'No Name';
+          cleanerID = userDoc['CleanerID'] ?? 'No CleanerID';
+        });
+        print('User name loaded: $userName');
+        print('CleanerID loaded: $cleanerID');
+      } else {
+        print('User document does not exist.');
+      }
+    } else {
+      print('No user is logged in.');
+    }
+  }
+
+  Future<void> _loadUserProfilePicture() async {
+    currentUser = _auth.currentUser;
+
+    if (currentUser != null) {
+      final DocumentSnapshot userDoc = await _firestore.collection('Cleaners').doc(currentUser!.uid).get();
+
+      if (userDoc.exists) {
+        setState(() {
+          userProfilePicture = userDoc['profile_photo'] ?? 'https://example.com/default-profile-picture.png';
+        });
+        print('User profile picture loaded: $userProfilePicture');
+      } else {
+        print('User document does not exist.');
+      }
+    } else {
+      print('No user is logged in.');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,9 +120,12 @@ class CleanersHomePageState extends State<CleanersHomePage> {
                                 child: Icon(Icons.menu, color: Color(0xFFF9C4B4), size: 30),
                               ),
                             ),
-                            const CircleAvatar(
+                            CircleAvatar(
                               radius: 40,
-                              backgroundImage: AssetImage('assets/person.jpg'),
+                              backgroundImage: userProfilePicture != null
+                                  ? NetworkImage(userProfilePicture!)
+                                  : const AssetImage('assets/person.jpg')
+                              as ImageProvider,
                             ),
                             GestureDetector(
                               onTap: () {
@@ -85,9 +144,9 @@ class CleanersHomePageState extends State<CleanersHomePage> {
                           ],
                         ),
                         SizedBox(height: size.height * 0.01),
-                        const Text(
-                          "Cleaner Name",
-                          style: TextStyle(
+                        Text(
+                          userName ?? "Cleaner Name",
+                          style: const TextStyle(
                             color: Color(0xFFF9C4B4),
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -120,10 +179,10 @@ class CleanersHomePageState extends State<CleanersHomePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    "Cleaner ID: 3278789098",
-                    style: TextStyle(
-                      color: Color(0xFF111217),
+                  Text(
+                    'CleanerID: ${cleanerID ?? "No CleanerID"}',
+                    style: const TextStyle(
+                      color:  Color(0xFF111217),
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -144,7 +203,7 @@ class CleanersHomePageState extends State<CleanersHomePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>  cleanersmyorders()),
+                                builder: (context) =>  const cleanersmyorders()),
                           );
 
                         },
@@ -159,7 +218,7 @@ class CleanersHomePageState extends State<CleanersHomePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>  cleanergolive()),
+                                builder: (context) =>  const cleanergolive()),
                           );
 
                         },
@@ -189,7 +248,7 @@ class CleanersHomePageState extends State<CleanersHomePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>  cleanermessages()),
+                                builder: (context) =>  const CleanerMessages()),
                           );
 
                         },

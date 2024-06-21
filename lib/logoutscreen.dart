@@ -35,7 +35,7 @@ class _LogoutState extends State<Logout > {
             "Logout",
             textAlign: TextAlign.left,
             style: TextStyle(
-              color:  Color(0xFFF9C4B4),
+              color:  Color(0xFF111217),
               fontSize: 20,
             ),
           ),
@@ -60,7 +60,7 @@ class _LogoutState extends State<Logout > {
           onPressed: () {
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => const customerlogin()),
+              MaterialPageRoute(builder: (context) =>  CustomerLogin()),
                   (route) => false,
             );
           },

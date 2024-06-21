@@ -64,7 +64,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   SizedBox(height: screenSize.height * 0.05),
                   Text(
-                    '"Lets Hurt your Dirt"',
+                    '"Let us Hurt your Dirt"',
                     style: TextStyle(
                       fontSize: screenSize.width * 0.04,
                       fontWeight: FontWeight.bold,
@@ -76,8 +76,8 @@ class WelcomeScreen extends StatelessWidget {
                     onPressed: () {
     Navigator.of(context).push(
     PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) => const customerlogin(),
-    transitionDuration: Duration(milliseconds: 3980),
+    pageBuilder: (context, animation, secondaryAnimation) =>   CustomerLogin(),
+    transitionDuration: const Duration(milliseconds: 5000),
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
     final screenWidth = MediaQuery.of(context).size.width;
 
@@ -86,12 +86,12 @@ class WelcomeScreen extends StatelessWidget {
     child: SlideTransition(
     position: Tween<Offset>(
     begin: Offset.zero,
-    end: Offset(-1.0, 0.0),
+    end: const Offset(-1.0, 0.0),
     ).animate(animation),
     child: Container(
     width: screenWidth / 2,
     color: Colors.white,
-    child: WelcomeScreen(),
+    child: const WelcomeScreen(),
     ),
     ),
     );
@@ -101,12 +101,12 @@ class WelcomeScreen extends StatelessWidget {
     child: SlideTransition(
     position: Tween<Offset>(
     begin: Offset.zero,
-    end: Offset(1.0, 0.0),
+    end: const Offset(1.0, 0.0),
     ).animate(animation),
     child: Container(
     width: screenWidth / 2,
     color: Colors.white,
-    child: WelcomeScreen(),
+    child: const WelcomeScreen(),
     ),
     ),
     );

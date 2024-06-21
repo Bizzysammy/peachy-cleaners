@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:peachy/Admin/adminbottomnav.dart';
 
@@ -12,12 +13,6 @@ class cleanerslist extends StatefulWidget {
 }
 
 class cleanerslistState extends State<cleanerslist> {
-
-  List<String> paymentmethod = ['VISA CARD', 'CASH', 'MOBILE MONEY'];
-  String? payment;
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +39,68 @@ class cleanerslistState extends State<cleanerslist> {
         ),
       ),
       bottomNavigationBar: const adminbottomnav(),
+      body: FutureBuilder<QuerySnapshot>(
+        future: FirebaseFirestore.instance.collection('Cleaners').get(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return const Center(child: Text('Error fetching Cleaners data'));
+          } else if (snapshot.hasData) {
+            final Cleaners= snapshot.data!.docs;
+            return ListView.builder(
+              itemCount: Cleaners.length,
+              itemBuilder: (context, index) {
+                final cleaner = Cleaners [index];
+                final cleanerData = cleaner.data() as Map<String, dynamic>;
+                final cleanerName = cleanerData['name'] ?? ''; // Name
+                final cleanerEmail = cleanerData['email'] ?? ''; // Email
+                final cleanerID = cleanerData['CleanerID'] ?? ''; // Email
+                final cleanerNumber = cleanerData['phoneNumber'] ?? ''; // Phone Number
+
+                return ListTile(
+                  title: Text(cleanerName),
+                  onTap: () {
+                    // When a van driver folder is clicked, display their details
+                    _showVanDriverDetails(context, cleanerName, cleanerEmail, cleanerID, cleanerNumber);
+                  },
+                );
+              },
+            );
+          } else {
+            return const Center(child: Text('No Cleaners available.'));
+          }
+        },
+      ),
 
     );
   }
+}
+
+void _showVanDriverDetails(BuildContext context, String name,String email, String cleanerID, String number) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text(name),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('CleanerID: $cleanerID'),
+            Text('Email: $email'),
+            Text('Number: $number'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('Close'),
+          ),
+        ],
+      );
+    },
+  );
 }

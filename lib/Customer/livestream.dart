@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:peachy/Customer/customerbottomnav.dart';
+import 'package:peachy/guest.dart';
 
 class customerlivestream extends StatefulWidget {
   const customerlivestream ({Key? key}) : super(key: key);
@@ -45,12 +46,12 @@ class customerlivestreamState extends State<customerlivestream> {
                         end: Alignment.topRight,
                       ),
                     ),
-                    child: Column(
+                    child: const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
+                          children: [
                             Text(
                               'J & S',
                               style: TextStyle(
@@ -70,7 +71,7 @@ class customerlivestreamState extends State<customerlivestream> {
                           ],
                         ),
                         SizedBox(height: 20),
-                        const Text(
+                        Text(
                           "Customer Go Live Screen",
                           style: TextStyle(
                             color: Color(0xFFF9C4B4),
@@ -111,7 +112,15 @@ class customerlivestreamState extends State<customerlivestream> {
                         borderRadius: BorderRadius.all(Radius.circular(20)),
                       ),
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context, MaterialPageRoute(
+                        builder: (context) => LiveScreen2(
+                          liveID: liveController.text,
+                        ),
+                      ),
+                      );
+                    },
                     child: const Text(
                       'Go Live',
                       style: TextStyle(

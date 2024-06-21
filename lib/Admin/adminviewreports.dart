@@ -1,24 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:peachy/Admin/adminbottomnav.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:peachy/Admin/dayofcleaningscreen.dart';
+import 'adminbottomnav.dart';
 
 
-
-class adminviewreports extends StatefulWidget {
-  const adminviewreports({Key? key}) : super(key: key);
+class AdminViewReports extends StatefulWidget {
+  const AdminViewReports({Key? key}) : super(key: key);
   static const String id = 'adminviewreports';
 
   @override
-  State<adminviewreports> createState() => adminviewreportsState();
+  State<AdminViewReports> createState() => AdminViewReportsState();
 }
 
-class adminviewreportsState extends State<adminviewreports> {
-
-  List<String> paymentmethod = ['VISA CARD', 'CASH', 'MOBILE MONEY'];
-  String? payment;
-
-
-
-
+class AdminViewReportsState extends State<AdminViewReports> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,7 +38,47 @@ class adminviewreportsState extends State<adminviewreports> {
         ),
       ),
       bottomNavigationBar: const adminbottomnav(),
-
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('Cleaners').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text('No cleaners found.'));
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.all(16.0),
+            itemCount: snapshot.data!.docs.length,
+            itemBuilder: (context, index) {
+              final doc = snapshot.data!.docs[index];
+              final data = doc.data() as Map<String, dynamic>;
+              return ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DayOfCleaningScreen(cleanerName: data['name']),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFF9C4B4), // Button background color
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                child: Text(
+                  data['name'],
+                  style: const TextStyle(color: Color(0xFF111217)),
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

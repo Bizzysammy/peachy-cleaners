@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:peachy/Cleaners/cleanersbottomnav.dart';
 import 'package:peachy/Cleaners/cleanershomescreen.dart';
-import 'package:peachy/Customer/customerbottomnav.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class cleanerprofilesetting extends StatefulWidget {
   const cleanerprofilesetting({Key? key}) : super(key: key);
@@ -12,11 +16,135 @@ class cleanerprofilesetting extends StatefulWidget {
 
 class cleanerprofilesettingState extends State<cleanerprofilesetting> {
 
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final ImagePicker _imagePicker = ImagePicker();
+  User? _user;
+  String? _userName;
+  String? _userEmail;
+  File? _imageFile;
+  String? _newPassword;
+  String? imageUrl;
+
+  // Add TextEditingControllers
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  late TextEditingController _passwordController;
+
+  @override
+  void initState() {
+    super.initState();
+    _user = _auth.currentUser;
+    _loadUserData();
+    _loadProfileImage(); // Load the profile image initially
+
+    // Initialize TextEditingControllers
+    _nameController = TextEditingController();
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    // Dispose the controllers when the widget is disposed
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadUserData() async {
+    final DocumentSnapshot userDoc =
+    await _firestore.collection('Cleaners').doc(_user!.uid).get();
+
+    setState(() {
+      _userName = userDoc['name'];
+      _userEmail = _user!.email;
+
+      // Set initial values for controllers
+      _nameController.text = _userName ?? '';
+      _emailController.text = _userEmail ?? '';
+    });
+  }
+
+  Future<void> _loadProfileImage() async {
+    final userDoc = await _firestore.collection('Cleaners').doc(_user!.uid).get();
+    final profileImageUrl = userDoc['profile_photo'];
+
+    setState(() {
+      imageUrl = profileImageUrl;
+    });
+  }
+
+  Future<void> _updateProfile() async {
+    try {
+      if (_userName != null) {
+        await _firestore
+            .collection('Cleaners')
+            .doc(_user!.uid)
+            .update({'name': _userName});
+      }
+      if (_imageFile != null) {
+        final String fileName = 'profile_${_user!.uid}.jpg';
+        final Reference storageRef = _storage.ref().child(fileName);
+        await storageRef.putFile(_imageFile!);
+        final String newImageUrl = await storageRef.getDownloadURL();
+        await _firestore
+            .collection('Cleaners')
+            .doc(_user!.uid)
+            .update({'profile_photo': newImageUrl});
+
+        // Update the imageUrl variable and trigger a rebuild
+        setState(() {
+          imageUrl = newImageUrl;
+        });
+      }
+      if (_newPassword != null) {
+        await _user!.updatePassword(_newPassword!);
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile updated successfully')),
+      );
+    } catch (e) {
+      print('Error updating profile: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update profile')),
+      );
+    }
+  }
+
+  Future<void> _gallery() async {
+    final XFile? pickedImage = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 50,
+    );
+
+    if (pickedImage != null) {
+      setState(() {
+        _imageFile = File(pickedImage.path);
+      });
+    }
+  }
+
+  Future<void> _camera() async {
+    final XFile? pickedImage = await _imagePicker.pickImage(
+      source: ImageSource.camera, // Change to ImageSource.camera
+      imageQuality: 50,
+    );
+
+    if (pickedImage != null) {
+      setState(() {
+        _imageFile = File(pickedImage.path);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return Scaffold(
-      bottomNavigationBar: const Customerbottomnav(),
+      bottomNavigationBar: const Cleanersbottomnav(),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -69,7 +197,7 @@ class cleanerprofilesettingState extends State<cleanerprofilesetting> {
                             ),
                             GestureDetector(
                               onTap: () {
-                                // Handle settings icon tap
+                                _updateProfile();
                               },
                               child: const Padding(
                                 padding: EdgeInsets.all(8.0),
@@ -92,14 +220,18 @@ class cleanerprofilesettingState extends State<cleanerprofilesetting> {
                                         leading: const Icon(Icons.photo_camera),
                                         title: const Text("Take a Photo"),
                                         onTap: () {
-
+                                          Navigator.of(context)
+                                              .pop(); // Close the dialog
+                                          _camera();
                                         },
                                       ),
                                       ListTile(
                                         leading: const Icon(Icons.photo),
                                         title: const Text("Choose from Gallery"),
                                         onTap: () {
-
+                                          Navigator.of(context)
+                                              .pop(); // Close the dialog
+                                          _gallery();
                                         },
                                       ),
                                     ],
@@ -109,8 +241,11 @@ class cleanerprofilesettingState extends State<cleanerprofilesetting> {
                             );
                           },
                           child: CircleAvatar(
-                            radius: 40,
-                            backgroundImage: AssetImage('assets/person.jpg'),
+                            radius: 60,
+                            backgroundImage: imageUrl != null
+                                ? NetworkImage(imageUrl!)
+                                : const AssetImage('assets/logo.jpg')
+                            as ImageProvider,
                           ),
                         ),
                       ],
@@ -122,6 +257,7 @@ class cleanerprofilesettingState extends State<cleanerprofilesetting> {
             Padding(
               padding: const EdgeInsets.all(3),
               child: TextField(
+                controller: _nameController,
                 decoration: const InputDecoration(
                   labelText: 'Name',
                   prefixIcon: Icon(Icons.person, color: Color(0xFF111217)),
@@ -131,7 +267,7 @@ class cleanerprofilesettingState extends State<cleanerprofilesetting> {
                 ),
                 onChanged: (value) {
                   setState(() {
-
+                    _userName = value;
                   });
                 },
               ),
@@ -139,6 +275,7 @@ class cleanerprofilesettingState extends State<cleanerprofilesetting> {
             Padding(
               padding: const EdgeInsets.all(3),
               child: TextField(
+                controller: _emailController,
                 decoration: const InputDecoration(
                   labelText: 'Email',
                   prefixIcon: Icon(Icons.email, color: Color(0xFF111217)),
@@ -148,7 +285,7 @@ class cleanerprofilesettingState extends State<cleanerprofilesetting> {
                 ),
                 onChanged: (value) {
                   setState(() {
-
+                    _userEmail = value;
                   });
                 },
               ),
@@ -156,6 +293,7 @@ class cleanerprofilesettingState extends State<cleanerprofilesetting> {
             Padding(
               padding: const EdgeInsets.all(3),
               child: TextField(
+                controller: _passwordController,
                 decoration: const InputDecoration(
                   labelText: 'New Password',
                   prefixIcon: Icon(Icons.lock, color: Color(0xFF111217)),
@@ -165,7 +303,7 @@ class cleanerprofilesettingState extends State<cleanerprofilesetting> {
                 ),
                 onChanged: (value) {
                   setState(() {
-
+                    _newPassword = value;
                   });
                 },
                 obscureText: true,
