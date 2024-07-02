@@ -46,7 +46,7 @@ class CustomerbottomnavState extends State<Customerbottomnav> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const customerlivestream(), // Pass currentUser
+            builder: (context) => const CustomerGoLive(), // Pass currentUser
           ),
         );
         break;

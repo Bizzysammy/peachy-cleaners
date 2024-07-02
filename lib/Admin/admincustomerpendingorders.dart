@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:peachy/Admin/adminbottomnav.dart';
 import 'package:peachy/Admin/admincustomerpendingscreen.dart';
 
-
 class admincustomerspendingorders extends StatefulWidget {
   const admincustomerspendingorders({Key? key}) : super(key: key);
   static const String id = 'admincustomerspendingorders';
@@ -54,12 +53,17 @@ class admincustomerspendingordersState extends State<admincustomerspendingorders
               child: Column(
                 children: snapshot.data!.docs.map((doc) {
                   final data = doc.data() as Map<String, dynamic>;
+                  final customerName = data['name'];
+                  final customerId = doc.id; // Get the customer ID
                   return ElevatedButton(
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => AdminCustomerPendingOrdersScreen(customerName: data['name']),
+                          builder: (context) => AdminCustomerPendingOrdersScreen(
+                            customerId: customerId, // Pass the customer ID
+                            customerName: customerName, // Pass the customer name
+                          ),
                         ),
                       );
                     },
@@ -68,7 +72,7 @@ class admincustomerspendingordersState extends State<admincustomerspendingorders
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    child: Text(data['name'], style: const TextStyle(color: Color(0xFF111217))),
+                    child: Text(customerName, style: const TextStyle(color: Color(0xFF111217))),
                   );
                 }).toList(),
               ),

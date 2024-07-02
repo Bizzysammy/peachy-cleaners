@@ -3,8 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AdminCustomerApprovedScreen extends StatelessWidget {
   final String customerName;
+  final String customerPhoneNumber; // Receive phone number
 
-  const AdminCustomerApprovedScreen({Key? key, required this.customerName}) : super(key: key);
+  const AdminCustomerApprovedScreen({Key? key, required this.customerName, required this.customerPhoneNumber}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -30,11 +31,11 @@ class AdminCustomerApprovedScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: FutureBuilder<QuerySnapshot>(
-        future: FirebaseFirestore.instance
-            .collection('verified orders')
-            .where('name', isEqualTo: customerName)
-            .get(),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('verified orders') // Replace 'verified orders' with your actual collection name
+            .where('phoneNumber', isEqualTo: customerPhoneNumber) // Use phone number to filter
+            .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -55,6 +56,7 @@ class AdminCustomerApprovedScreen extends StatelessWidget {
                   final phone = orderData['phoneNumber'] as String?;
                   final category = orderData['category'] as String?;
                   final sites = orderData['sites'] as String?;
+                  final otherServices = orderData['otherServices'] as String?;
                   final place = orderData['place'] as String?;
                   final location = orderData['location'] as String?;
                   final paymentmethod = orderData['paymentmethod'] as String?;
@@ -72,6 +74,8 @@ class AdminCustomerApprovedScreen extends StatelessWidget {
                           Text('Phone: ${phone ?? 'N/A'}'),
                           Text('Category: ${category ?? 'N/A'}'),
                           Text('Sites: ${sites ?? 'N/A'}'),
+                          if (otherServices != null && otherServices.isNotEmpty)
+                            Text('Other Services: $otherServices'),
                           Text('Place: ${place ?? 'N/A'}'),
                           Text('Location: ${location ?? 'N/A'}'),
                           Text('Payment Method: ${paymentmethod ?? 'N/A'}'),

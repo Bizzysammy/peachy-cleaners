@@ -52,7 +52,7 @@ class CleanerMessageScreenState extends State<CleanerMessageScreen> {
                   .collection('Cleaner messages')
                   .doc(widget.cleanerId)
                   .collection('userMessages')
-                  .orderBy('timestamp', descending: false)
+                  .orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {

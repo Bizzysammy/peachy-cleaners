@@ -18,7 +18,7 @@ class admincustomerapprovedordersState extends State<admincustomerapprovedorders
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Customers approved Orders',
+          'Customers Approved Orders',
           style: TextStyle(color: Color(0xFFF9C4B4)),
         ),
         centerTitle: true,
@@ -55,12 +55,18 @@ class admincustomerapprovedordersState extends State<admincustomerapprovedorders
                   child: Column(
                     children: snapshot.data!.docs.map((doc) {
                       final data = doc.data() as Map<String, dynamic>;
+                      final customerName = data['name'];
+                      final customerPhoneNumber = data['phoneNumber']; // Get phone number
+
                       return ElevatedButton(
                         onPressed: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => AdminCustomerApprovedScreen(customerName: data['name']),
+                              builder: (context) => AdminCustomerApprovedScreen(
+                                customerName: customerName,
+                                customerPhoneNumber: customerPhoneNumber, // Pass phone number
+                              ),
                             ),
                           );
                         },
@@ -69,7 +75,7 @@ class admincustomerapprovedordersState extends State<admincustomerapprovedorders
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
-                        child: Text(data['name'], style: const TextStyle(color: Color(0xFF111217))),
+                        child: Text(customerName, style: const TextStyle(color: Color(0xFF111217))),
                       );
                     }).toList(),
                   ),

@@ -4,17 +4,22 @@ import 'package:flutter/material.dart';
 import 'package:peachy/Admin/adminlogin.dart';
 import 'package:peachy/Customer/customerforgotpassword.dart';
 import 'package:peachy/Customer/customerhomepage.dart';
-
 import 'package:peachy/customer/customersignup.dart';
 import 'package:peachy/welcomescreen.dart';
-
 import '../Cleaners/cleanerslogin.dart';
 
-class CustomerLogin extends StatelessWidget {
+class CustomerLogin extends StatefulWidget {
   CustomerLogin({Key? key}) : super(key: key);
 
+  @override
+  _CustomerLoginState createState() => _CustomerLoginState();
+}
+
+class _CustomerLoginState extends State<CustomerLogin> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  bool _isPasswordVisible = false; // Track password visibility
 
   Future<void> login(BuildContext context, String email, String password) async {
     try {
@@ -26,6 +31,7 @@ class CustomerLogin extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         },
       );
+
       final querySnapshot = await FirebaseFirestore.instance
           .collection('Customers')
           .where('email', isEqualTo: email)
@@ -39,6 +45,7 @@ class CustomerLogin extends StatelessWidget {
         _showErrorSnackBar(context, 'User not found, only customers can login here');
         return;
       }
+
       // Sign in the user with Firebase Authentication
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
@@ -52,7 +59,7 @@ class CustomerLogin extends StatelessWidget {
       Navigator.of(context).push(
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) => const customerhomepage(),
-          transitionDuration: const Duration(milliseconds: 8000),
+          transitionDuration: const Duration(milliseconds: 800),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             final explodeAnimation = CurvedAnimation(
               parent: animation,
@@ -109,6 +116,12 @@ class CustomerLogin extends StatelessWidget {
       backgroundColor: Colors.red,
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  void _togglePasswordVisibility() {
+    setState(() {
+      _isPasswordVisible = !_isPasswordVisible;
+    });
   }
 
   @override
@@ -226,7 +239,7 @@ class CustomerLogin extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) =>  AdminLogin()),
+                    MaterialPageRoute(builder: (context) => AdminLogin()),
                   );
                 },
                 child: Text(
@@ -284,10 +297,19 @@ class CustomerLogin extends StatelessWidget {
                     TextFormField(
                       controller: _passwordController,
                       keyboardType: TextInputType.visiblePassword,
-                      obscureText: true,
-                      decoration: const InputDecoration(
+                      obscureText: !_isPasswordVisible, // Toggle visibility based on state
+                      decoration: InputDecoration(
                         hintText: 'Password',
                         prefixIcon: Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+
+                          ),
+                          onPressed: () {
+                            _togglePasswordVisibility(); // Toggle visibility on button press
+                          },
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(20)),
                         ),

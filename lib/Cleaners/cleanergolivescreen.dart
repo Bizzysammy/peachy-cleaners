@@ -1,7 +1,9 @@
-
 import 'package:flutter/material.dart';
+import 'package:peachy/cleaner_auth_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:peachy/Cleaners/cleanersbottomnav.dart';
-import 'package:peachy/host.dart';
+import 'package:peachy/live/startlive.dart';
+
 
 class cleanergolive extends StatefulWidget {
   const cleanergolive({Key? key}) : super(key: key);
@@ -112,13 +114,18 @@ class cleanergoliveState extends State<cleanergolive> {
                         borderRadius: BorderRadius.all(Radius.circular(20)),
                       ),
                     ),
-                    onPressed: () {
+                    onPressed: () async {
+                      final cleanerAuthProvider = Provider.of<CleanerAuthProvider>(context, listen: false);
+                      final cleanerName = await cleanerAuthProvider.getCleanerName();
+
                       Navigator.push(
-                        context, MaterialPageRoute(
-                        builder: (context) => LiveScreen1(
-                          liveID: liveController.text,
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => LiveScreen1(
+                            liveID: liveController.text,
+                            userName: cleanerName,
+                          ),
                         ),
-                      ),
                       );
                     },
                     child: const Text(

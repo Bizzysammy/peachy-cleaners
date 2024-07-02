@@ -53,12 +53,18 @@ class admincustomerrejectedordersState extends State<admincustomerrejectedorders
               child: Column(
                 children: snapshot.data!.docs.map((doc) {
                   final data = doc.data() as Map<String, dynamic>;
+                  final customerName = data['name'];
+                  final customerPhoneNumber = data['phoneNumber']; // Get phone number
+
                   return ElevatedButton(
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => AdminCustomerRejectedScreen(customerName: data['name']),
+                          builder: (context) => AdminCustomerRejectedScreen(
+                              customerName: customerName,
+                              customerPhoneNumber: customerPhoneNumber // Pass phone number
+                          ),
                         ),
                       );
                     },
@@ -67,7 +73,7 @@ class admincustomerrejectedordersState extends State<admincustomerrejectedorders
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    child: Text(data['name'], style: const TextStyle(color: Color(0xFF111217))),
+                    child: Text(customerName, style: const TextStyle(color: Color(0xFF111217))),
                   );
                 }).toList(),
               ),

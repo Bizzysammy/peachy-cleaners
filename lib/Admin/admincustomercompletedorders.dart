@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:peachy/Admin/adminbottomnav.dart';
-import'package:peachy/Admin/admincustomercompletedscreen.dart';
+import 'package:peachy/Admin/admincustomercompletedscreen.dart';
 
 class admincustomercompletedorders extends StatefulWidget {
   const admincustomercompletedorders({Key? key}) : super(key: key);
@@ -12,7 +12,6 @@ class admincustomercompletedorders extends StatefulWidget {
 }
 
 class admincustomercompletedordersState extends State<admincustomercompletedorders> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,12 +54,18 @@ class admincustomercompletedordersState extends State<admincustomercompletedorde
                   child: Column(
                     children: snapshot.data!.docs.map((doc) {
                       final data = doc.data() as Map<String, dynamic>;
+                      final customerName = data['name'];
+                      final customerPhoneNumber = data['phoneNumber']; // Get phone number
+
                       return ElevatedButton(
                         onPressed: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => AdminCustomerCompletedScreen(customerName: data['name']),
+                              builder: (context) => AdminCustomerCompletedScreen(
+                                customerName: customerName,
+                                customerPhoneNumber: customerPhoneNumber, // Pass phone number
+                              ),
                             ),
                           );
                         },
@@ -69,7 +74,7 @@ class admincustomercompletedordersState extends State<admincustomercompletedorde
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
-                        child: Text(data['name'], style: const TextStyle(color: Color(0xFF111217))),
+                        child: Text(customerName, style: const TextStyle(color: Color(0xFF111217))),
                       );
                     }).toList(),
                   ),

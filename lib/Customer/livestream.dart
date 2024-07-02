@@ -1,16 +1,19 @@
-
 import 'package:flutter/material.dart';
 import 'package:peachy/Customer/customerbottomnav.dart';
-import 'package:peachy/guest.dart';
+import 'package:peachy/customer_auth_provider.dart';
+import 'package:peachy/live/joinlive.dart';
+import 'package:provider/provider.dart';
 
-class customerlivestream extends StatefulWidget {
-  const customerlivestream ({Key? key}) : super(key: key);
+
+
+class CustomerGoLive extends StatefulWidget {
+  const CustomerGoLive({Key? key}) : super(key: key);
 
   @override
-  customerlivestreamState createState() => customerlivestreamState();
+  CustomerGoLiveState createState() => CustomerGoLiveState();
 }
 
-class customerlivestreamState extends State<customerlivestream> {
+class CustomerGoLiveState extends State<CustomerGoLive> {
   final liveController = TextEditingController();
 
   @override
@@ -112,13 +115,18 @@ class customerlivestreamState extends State<customerlivestream> {
                         borderRadius: BorderRadius.all(Radius.circular(20)),
                       ),
                     ),
-                    onPressed: () {
+                    onPressed: () async {
+                      final customerAuthProvider = Provider.of<CustomerAuthProvider>(context, listen: false);
+                      final customerName = await customerAuthProvider.getCustomerName();
+
                       Navigator.push(
-                        context, MaterialPageRoute(
-                        builder: (context) => LiveScreen2(
-                          liveID: liveController.text,
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => LiveScreen2(
+                            liveID: liveController.text,
+                            userName: customerName,
+                          ),
                         ),
-                      ),
                       );
                     },
                     child: const Text(

@@ -2,11 +2,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:peachy/Admin/adminhomepage.dart';
 
-class AdminLogin extends StatelessWidget {
+class AdminLogin extends StatefulWidget {
   AdminLogin({Key? key}) : super(key: key);
 
+  @override
+  _AdminLoginState createState() => _AdminLoginState();
+}
+
+class _AdminLoginState extends State<AdminLogin> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isPasswordVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +20,7 @@ class AdminLogin extends StatelessWidget {
     final screenSize = MediaQuery.sizeOf(context);
 
     return Scaffold(
-      backgroundColor: Color(0xFFF9C4B4), // Set Scaffold background color to pink
+      backgroundColor: const Color(0xFFF9C4B4), // Set Scaffold background color to pink
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -74,7 +80,7 @@ class AdminLogin extends StatelessWidget {
                 ),
               ),
               Container(
-                color: Color(0xFFF9C4B4), // Background color for the remaining space
+                color: const Color(0xFFF9C4B4), // Background color for the remaining space
                 padding: EdgeInsets.symmetric(horizontal: size.width * 0.1),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -102,11 +108,21 @@ class AdminLogin extends StatelessWidget {
                     TextFormField(
                       controller: _passwordController,
                       keyboardType: TextInputType.visiblePassword,
-                      obscureText: true,
-                      decoration: const InputDecoration(
+                      obscureText: !_isPasswordVisible,
+                      decoration: InputDecoration(
                         hintText: 'Password',
-                        prefixIcon: Icon(Icons.lock),
-                        border: OutlineInputBorder(
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                        ),
+                        border: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(20)),
                         ),
                       ),

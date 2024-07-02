@@ -118,7 +118,7 @@ class customermyordersState extends State<customermyorders> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const customercompletedorders (),
+                    builder: (context) => const CustomerCompletedOrders (),
                   ),
                 );
                 // Add your onPressed code here!

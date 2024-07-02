@@ -6,7 +6,8 @@ class CustomerAuthProvider extends ChangeNotifier {
   FirebaseAuth _auth = FirebaseAuth.instance;
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   User? _user;
-  String? _userName; // Make userName nullable
+  String? _userName;
+  String? _phoneNumber;
 
   CustomerAuthProvider() {
     _init();
@@ -16,7 +17,7 @@ class CustomerAuthProvider extends ChangeNotifier {
     _auth.authStateChanges().listen((User? user) async {
       _user = user;
       if (_user != null) {
-        await _loadUserData(); // Load user data when user is logged in
+        await _loadUserData();
       }
       notifyListeners();
     });
@@ -27,7 +28,8 @@ class CustomerAuthProvider extends ChangeNotifier {
 
     if (userDoc.exists) {
       _userName = userDoc['name'] ?? 'No Name';
-      print('User name loaded: $_userName');
+      _phoneNumber = userDoc['phoneNumber'] ?? 'No Phone Number';
+      print('User data loaded: $_userName, $_phoneNumber');
     } else {
       print('User document does not exist.');
     }
@@ -37,9 +39,13 @@ class CustomerAuthProvider extends ChangeNotifier {
 
   bool get isLoggedIn => _user != null;
 
-  // Use a getter that returns a Future<String>
   Future<String> getCustomerName() async {
-    await _loadUserData(); // Ensure userName is loaded before returning
+    await _loadUserData();
     return _userName ?? 'Unknown';
+  }
+
+  Future<String> getPhoneNumber() async {
+    await _loadUserData();
+    return _phoneNumber ?? 'Unknown';
   }
 }

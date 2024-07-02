@@ -3,8 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AdminCustomerCompletedScreen extends StatelessWidget {
   final String customerName;
+  final String customerPhoneNumber; // Receive phone number
 
-  const AdminCustomerCompletedScreen({Key? key, required this.customerName}) : super(key: key);
+  const AdminCustomerCompletedScreen({Key? key, required this.customerName, required this.customerPhoneNumber}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -30,31 +31,31 @@ class AdminCustomerCompletedScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: FutureBuilder<QuerySnapshot>(
-        future: FirebaseFirestore.instance
-            .collection('completed orders')
-            .where('name', isEqualTo: customerName)
-            .get(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('completed orders') // Assuming your collection is named 'completed orders'
+            .where('phoneNumber', isEqualTo: customerPhoneNumber) // Use phone number to filter
+            .snapshots(),
+        builder: (context, orderSnapshot) {
+          if (orderSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
+          } else if (orderSnapshot.hasError) {
             return const Center(child: Text('Error fetching orders data'));
-          } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          } else if (!orderSnapshot.hasData || orderSnapshot.data!.docs.isEmpty) {
             return const Center(child: Text('No completed orders found.'));
           } else {
-            final orders = snapshot.data!.docs;
+            final orders = orderSnapshot.data!.docs;
 
             return SingleChildScrollView(
               child: Column(
                 children: List.generate(orders.length, (index) {
                   final orderData = orders[index].data() as Map<String, dynamic>;
 
-                  // Safely access properties with null-aware operators
                   final name = orderData['name'] as String?;
                   final phone = orderData['phoneNumber'] as String?;
                   final category = orderData['category'] as String?;
                   final sites = orderData['sites'] as String?;
+                  final otherServices = orderData['otherServices'] as String?;
                   final place = orderData['place'] as String?;
                   final location = orderData['location'] as String?;
                   final paymentmethod = orderData['paymentmethod'] as String?;
@@ -71,6 +72,8 @@ class AdminCustomerCompletedScreen extends StatelessWidget {
                           Text('Phone: ${phone ?? 'N/A'}'),
                           Text('Category: ${category ?? 'N/A'}'),
                           Text('Sites: ${sites ?? 'N/A'}'),
+                          if (otherServices != null && otherServices.isNotEmpty)
+                            Text('Other Services: $otherServices'),
                           Text('Place: ${place ?? 'N/A'}'),
                           Text('Location: ${location ?? 'N/A'}'),
                           Text('Payment Method: ${paymentmethod ?? 'N/A'}'),
@@ -86,9 +89,8 @@ class AdminCustomerCompletedScreen extends StatelessWidget {
                             context: context,
                             builder: (BuildContext context) {
                               return AlertDialog(
-                                title: Text('delete Order'),
-                                content:
-                                Text('Are you sure you want to delete this order?'),
+                                title: Text('Delete Order'),
+                                content: Text('Are you sure you want to delete this order?'),
                                 actions: <Widget>[
                                   TextButton(
                                     onPressed: () {
@@ -124,4 +126,3 @@ class AdminCustomerCompletedScreen extends StatelessWidget {
     orderReference.delete();
   }
 }
-

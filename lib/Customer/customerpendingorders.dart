@@ -20,7 +20,7 @@ class customerpendingordersState extends State<customerpendingorders> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'MY Pending Orders',
+          'My Orders', // Changed to "My Orders" for clarity
           style: TextStyle(color: Color(0xFFF9C4B4)),
         ),
         centerTitle: true,
@@ -40,24 +40,24 @@ class customerpendingordersState extends State<customerpendingorders> {
         ),
       ),
       bottomNavigationBar: const Customerbottomnav(),
-      body: StreamBuilder(
+      body: StreamBuilder<QuerySnapshot>(
         stream: _firestore
-            .collection('Customers')
-            .doc(userId)
+            .collection('customer orders') // Correct collection name
+            .doc(userId) // Use user's UID to target their orders
             .collection('myorders')
             .snapshots(),
-        builder: (context, ordersSnapshot) {
-          if (!ordersSnapshot.hasData) {
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
             return const Center(
               child: CircularProgressIndicator(),
             );
           }
 
-          final orders = ordersSnapshot.data!.docs;
+          final orders = snapshot.data!.docs;
 
           if (orders.isEmpty) {
             return const Center(
-              child: Text('No pending orders found.'),
+              child: Text('You have no orders yet.'),
             );
           }
 
@@ -74,6 +74,7 @@ class customerpendingordersState extends State<customerpendingorders> {
 
                     final category = orderData['category'] as String?;
                     final sites = orderData['sites'] as String?;
+                    final otherServices = orderData['otherServices'] as String?;
                     final place = orderData['place'] as String?;
                     final location = orderData['location'] as String?;
                     final paymentMethod =
@@ -89,6 +90,8 @@ class customerpendingordersState extends State<customerpendingorders> {
                           children: [
                             Text('Category: ${category ?? 'N/A'}'),
                             Text('Sites: ${sites ?? 'N/A'}'),
+                            if (otherServices != null && otherServices.isNotEmpty)
+                              Text('Other Services: $otherServices'),
                             Text('Place: ${place ?? 'N/A'}'),
                             Text('Location: ${location ?? 'N/A'}'),
                             Text('Payment Method: ${paymentMethod ?? 'N/A'}'),

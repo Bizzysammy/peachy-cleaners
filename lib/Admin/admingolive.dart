@@ -1,7 +1,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:peachy/Admin/adminbottomnav.dart';
-import 'package:peachy/guest.dart';
+import 'package:peachy/live/adminjoinlive.dart';
+
+
 
 class admingolive extends StatefulWidget {
   const admingolive({Key? key}) : super(key: key);
@@ -115,7 +117,7 @@ class admingoliveState extends State<admingolive> {
                     onPressed: () {
                       Navigator.push(
                         context, MaterialPageRoute(
-                        builder: (context) => LiveScreen2(
+                        builder: (context) => adminlive(
                           liveID: liveController.text,
                         ),
                       ),

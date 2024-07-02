@@ -8,8 +8,6 @@ import 'package:peachy/Customer/customerprofilesettings.dart';
 import 'package:peachy/Customer/mapdialogue.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-
-
 class customerhomepage extends StatefulWidget {
   const customerhomepage({Key? key}) : super(key: key);
 
@@ -57,14 +55,20 @@ class customerhomepageState extends State<customerhomepage> {
     'Other Related Services e.g.',
     'Carpet Washing',
     'Scrubbing',
-    'Hoovering'
+    'Hoovering',
+    'sofa cleaning'
   ];
   String? sites;
+
+  bool otherServicesSelected = false;
+  String otherServicesText = 'Other Services';
 
   final TextEditingController _placeController = TextEditingController();
   final TextEditingController _timeController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _otherServicesController = TextEditingController();
+
 
   @override
   void initState() {
@@ -222,11 +226,11 @@ class customerhomepageState extends State<customerhomepage> {
                   ),
                   SingleChildScrollView(
                     child: Padding(
-                      padding: const EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.all(5.0),
                       child: Column(
                         children: [
                           Padding(
-                            padding: const EdgeInsets.all(3),
+                            padding: const EdgeInsets.all(1),
                             child: DropdownButtonFormField<String>(
                               items: cleaningCategory.map((String category) {
                                 return DropdownMenuItem<String>(
@@ -246,7 +250,7 @@ class customerhomepageState extends State<customerhomepage> {
                                 Icon(Icons.house, color: Color(0xFF111217)),
                                 border: OutlineInputBorder(
                                   borderRadius:
-                                  BorderRadius.all(Radius.circular(10)),
+                                  BorderRadius.all(Radius.circular(6)),
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
@@ -254,7 +258,7 @@ class customerhomepageState extends State<customerhomepage> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.all(3),
+                            padding: const EdgeInsets.all(1),
                             child: DropdownButtonFormField<String>(
                               items: cleaningSites.map((String site) {
                                 return DropdownMenuItem<String>(
@@ -274,15 +278,29 @@ class customerhomepageState extends State<customerhomepage> {
                                     color: Color(0xFF111217)),
                                 border: OutlineInputBorder(
                                   borderRadius:
-                                  BorderRadius.all(Radius.circular(10)),
+                                  BorderRadius.all(Radius.circular(6)),
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
                               ),
                             ),
                           ),
+                          CheckboxListTile(
+                            title: Text(otherServicesText),
+                            value: otherServicesSelected,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                otherServicesSelected = value ?? false;
+                                if (otherServicesSelected) {
+                                  _showOtherServicesDialog();
+                                } else {
+                                  otherServicesText = 'Other Services';
+                                }
+                              });
+                            },
+                          ),
                           Padding(
-                            padding: const EdgeInsets.all(3),
+                            padding: const EdgeInsets.all(1),
                             child: TextField(
                               controller: _placeController,
                               decoration: const InputDecoration(
@@ -291,7 +309,7 @@ class customerhomepageState extends State<customerhomepage> {
                                     color: Color(0xFF111217)),
                                 border: OutlineInputBorder(
                                   borderRadius:
-                                  BorderRadius.all(Radius.circular(10)),
+                                  BorderRadius.all(Radius.circular(6)),
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
@@ -299,14 +317,14 @@ class customerhomepageState extends State<customerhomepage> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.all(3),
+                            padding: const EdgeInsets.all(1),
                             child: TextField(
                               controller: _locationController,
                               decoration: InputDecoration(
                                 labelText: 'Location',
                                 prefixIcon: const Icon(Icons.place, color: Color(0xFF111217)),
                                 border: const OutlineInputBorder(
-                                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  borderRadius: BorderRadius.all(Radius.circular(6)),
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
@@ -332,7 +350,7 @@ class customerhomepageState extends State<customerhomepage> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.all(3),
+                            padding: const EdgeInsets.all(1),
                             child: TextField(
                               controller: _dateController,
                               decoration: const InputDecoration(
@@ -341,7 +359,7 @@ class customerhomepageState extends State<customerhomepage> {
                                     color: Color(0xFF111217)),
                                 border: OutlineInputBorder(
                                   borderRadius:
-                                  BorderRadius.all(Radius.circular(10)),
+                                  BorderRadius.all(Radius.circular(6)),
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
@@ -363,7 +381,7 @@ class customerhomepageState extends State<customerhomepage> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.all(3),
+                            padding: const EdgeInsets.all(1),
                             child: TextField(
                               controller: _timeController,
                               decoration: const InputDecoration(
@@ -372,7 +390,7 @@ class customerhomepageState extends State<customerhomepage> {
                                     color: Color(0xFF111217)),
                                 border: OutlineInputBorder(
                                   borderRadius:
-                                  BorderRadius.all(Radius.circular(10)),
+                                  BorderRadius.all(Radius.circular(6)),
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
@@ -391,7 +409,7 @@ class customerhomepageState extends State<customerhomepage> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.all(3),
+                            padding: const EdgeInsets.all(1),
                             child: DropdownButtonFormField<String>(
                               items: paymentMethod.map((String method) {
                                 return DropdownMenuItem<String>(
@@ -411,7 +429,7 @@ class customerhomepageState extends State<customerhomepage> {
                                     color: Color(0xFF111217)),
                                 border: OutlineInputBorder(
                                   borderRadius:
-                                  BorderRadius.all(Radius.circular(10)),
+                                  BorderRadius.all(Radius.circular(6)),
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
@@ -419,7 +437,7 @@ class customerhomepageState extends State<customerhomepage> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(2),
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: const Color(0xFF111217),
@@ -452,25 +470,8 @@ class customerhomepageState extends State<customerhomepage> {
                                   return;
                                 }
 
-                                final userQuery = _firestore
-                                    .collection('Customers')
-                                    .where('uid', isEqualTo: currentUser!.uid)
-                                    .limit(1);
-
-                                final userQuerySnapshot = await userQuery.get();
-
-                                if (userQuerySnapshot.docs.isEmpty) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Customer does not exist')),
-                                  );
-                                  return;
-                                }
-
-                                final userDocRef = userQuerySnapshot.docs[0].reference;
-
-                                final userData = userQuerySnapshot.docs[0].data();
-                                final int currentOrderCount = userData['orderCount'] ?? 0;
-                                final int nextOrderCount = currentOrderCount + 1;
+                                // Get the user's UID (unique identifier)
+                                final userUid = currentUser!.uid;
 
                                 final orderData = {
                                   'place': place,
@@ -480,14 +481,17 @@ class customerhomepageState extends State<customerhomepage> {
                                   'date': date,
                                   'category': category,
                                   'sites': sites,
+                                  'otherServices': otherServicesSelected ? otherServicesText : null,
                                   'name': userName,
                                   'phoneNumber': userPhoneNumber,
                                 };
 
-                                userDocRef
-                                    .collection('myorders')
-                                    .doc('my order $nextOrderCount')
-                                    .set(orderData)
+                                // Store the order in the "customer orders" collection
+                                await _firestore
+                                    .collection('customer orders')
+                                    .doc(userUid) // Use the user's UID as a document ID
+                                    .collection('myorders') // Subcollection for this user's orders
+                                    .add(orderData) // Add the order data
                                     .then((_) {
                                   _placeController.clear();
                                   _locationController.clear();
@@ -500,8 +504,6 @@ class customerhomepageState extends State<customerhomepage> {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(content: Text('Order saved successfully')),
                                   );
-
-                                  userDocRef.update({'orderCount': nextOrderCount});
                                 }).catchError((e) {
                                   print('Error making order: $e');
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -524,6 +526,41 @@ class customerhomepageState extends State<customerhomepage> {
       ),
     );
   }
+
+  Future<void> _showOtherServicesDialog() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Enter Other Services'),
+          content: TextField(
+            controller: _otherServicesController,
+            decoration: const InputDecoration(
+              hintText: 'Other services',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Add'),
+              onPressed: () {
+                setState(() {
+                  otherServicesText = _otherServicesController.text;
+                });
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
   Future<void> _showMapDialog(BuildContext context) async {
     LatLng? selectedLocation = await showDialog<LatLng>(

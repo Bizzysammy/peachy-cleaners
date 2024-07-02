@@ -55,6 +55,7 @@ class AdminCleanersCompletedScreen extends StatelessWidget {
                   final phone = orderData['phoneNumber'] as String?;
                   final category = orderData['category'] as String?;
                   final sites = orderData['sites'] as String?;
+                  final otherServices = orderData['otherServices'] as String?;
                   final place = orderData['place'] as String?;
                   final location = orderData['location'] as String?;
                   final paymentMethod = orderData['paymentmethod'] as String?;
@@ -72,6 +73,8 @@ class AdminCleanersCompletedScreen extends StatelessWidget {
                           Text('Phone: ${phone ?? 'N/A'}'),
                           Text('Category: ${category ?? 'N/A'}'),
                           Text('Sites: ${sites ?? 'N/A'}'),
+                          if (otherServices != null && otherServices.isNotEmpty)
+                            Text('Other Services: $otherServices'),
                           Text('Place: ${place ?? 'N/A'}'),
                           Text('Location: ${location ?? 'N/A'}'),
                           Text('Payment Method: ${paymentMethod ?? 'N/A'}'),

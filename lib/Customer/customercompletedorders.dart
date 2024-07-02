@@ -1,19 +1,19 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:peachy/Customer/customerbottomnav.dart';
 import 'package:peachy/customer_auth_provider.dart';
 import 'package:provider/provider.dart';
 
-class customercompletedorders extends StatefulWidget {
-  const customercompletedorders({Key? key}) : super(key: key);
+class CustomerCompletedOrders extends StatefulWidget {
+  const CustomerCompletedOrders({Key? key}) : super(key: key);
 
   static const String id = 'customercompletedorders';
 
   @override
-  State<customercompletedorders> createState() => customercompletedordersState();
+  State<CustomerCompletedOrders> createState() => CustomerCompletedOrdersState();
 }
 
-class customercompletedordersState extends State<customercompletedorders> {
+class CustomerCompletedOrdersState extends State<CustomerCompletedOrders> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,25 +38,30 @@ class customercompletedordersState extends State<customercompletedorders> {
           ),
         ),
       ),
-      bottomNavigationBar: const Customerbottomnav(),
-      body: FutureBuilder<String>(
-        future: context.watch<CustomerAuthProvider>().getCustomerName(),
-        builder: (context, customerNameSnapshot) {
-          if (customerNameSnapshot.connectionState == ConnectionState.waiting) {
+      bottomNavigationBar: const Customerbottomnav(), // Assuming CustomerBottomNav is correctly implemented
+      body: FutureBuilder<List<String>>(
+        future: Future.wait([
+          context.read<CustomerAuthProvider>().getCustomerName(),
+          context.read<CustomerAuthProvider>().getPhoneNumber(),
+        ]),
+        builder: (context, AsyncSnapshot<List<String>> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          } else if (customerNameSnapshot.hasError) {
-            return const Center(child: Text('Error fetching user data'));
-          } else if (customerNameSnapshot.data == 'Unknown') {
-            return const Center(child: Text('No user found.')); // Handle 'Unknown' case
+          } else if (snapshot.hasError) {
+            return const Center(child: Text('Error fetching customer data'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('Customer data not found.'));
           } else {
-            final customerName = customerNameSnapshot.data!;
+            final customerName = snapshot.data![0];
+            final phoneNumber = snapshot.data![1];
 
-            return FutureBuilder<QuerySnapshot>(
-              future: FirebaseFirestore.instance
+            return StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
                   .collection('completed orders')
                   .where('name', isEqualTo: customerName)
-                  .get(),
-              builder: (context, snapshot) {
+                  .where('phoneNumber', isEqualTo: phoneNumber)
+                  .snapshots(),
+              builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
@@ -68,45 +73,42 @@ class customercompletedordersState extends State<customercompletedorders> {
 
                   return SingleChildScrollView(
                     child: Column(
-                      children: [
-                        ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: orders.length,
-                          itemBuilder: (context, index) {
-                            final orderData =
-                            orders[index].data() as Map<String, dynamic>;
+                      children: List.generate(
+                        orders.length,
+                            (index) {
+                          final orderData = orders[index].data() as Map<String, dynamic>;
 
-                            final category = orderData['category'] as String?;
-                            final sites = orderData['sites'] as String?;
-                            final place = orderData['place'] as String?;
-                            final location =
-                            orderData['location'] as String?;
-                            final paymentMethod =
-                            orderData['paymentmethod'] as String?;
-                            final date = orderData['date'] as String?;
-                            final time = orderData['time'] as String?;
+                          final category = orderData['category'] as String?;
+                          final sites = orderData['sites'] as String?;
+                          final otherServices = orderData['otherServices'] as String?;
+                          final place = orderData['place'] as String?;
+                          final location = orderData['location'] as String?;
+                          final paymentMethod = orderData['paymentmethod'] as String?;
+                          final date = orderData['date'] as String?;
+                          final time = orderData['time'] as String?;
 
-                            return Container(
+                          return Container(
                               padding: const EdgeInsets.all(8.0),
                               child: ListTile(
-                                title: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Category: ${category ?? 'N/A'}'),
-                                    Text('Sites: ${sites ?? 'N/A'}'),
-                                    Text('Place: ${place ?? 'N/A'}'),
-                                    Text('Location: ${location ?? 'N/A'}'),
-                                    Text('Payment Method: ${paymentMethod ?? 'N/A'}'),
-                                    Text('Date: ${date ?? 'N/A'}'),
-                                    Text('Time: ${time ?? 'N/A'}'),
-                                  ],
-                                ),
+                              title: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                              Text('Category: ${category ?? 'N/A'}'),
+                              Text('Sites: ${sites ?? 'N/A'}'),
+                                if (otherServices != null && otherServices.isNotEmpty)
+                                  Text('Other Services: $otherServices'),
+                                Text('Place: ${place ?? 'N/A'}'),
+                              Text('Location: ${location ?? 'N/A'}'),
+                              Text('Payment Method: ${paymentMethod ?? 'N/A'}'),
+                              Text('Date: ${date ?? 'N/A'}'),
+                              Text('Time: ${time ?? 'N/A'}'),
+                              ],
+                              ),
                                 tileColor: Colors.blue,
                               ),
-                            );
-                          },
-                        ),
-                      ],
+                          );
+                        },
+                      ),
                     ),
                   );
                 }

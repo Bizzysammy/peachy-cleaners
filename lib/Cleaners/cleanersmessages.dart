@@ -62,7 +62,7 @@ class CleanerMessagesState extends State<CleanerMessages> {
                         .collection('Cleaner messages')
                         .doc(userId)
                         .collection('userMessages')
-                        .orderBy('timestamp', descending: false)
+                        .orderBy('timestamp', descending: true)
                         .snapshots(),
                     builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {

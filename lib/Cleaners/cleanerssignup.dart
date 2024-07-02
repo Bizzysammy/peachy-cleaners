@@ -4,15 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:peachy/cleaners/cleanerslogin.dart';
 
-
-class cleanerssignup extends StatefulWidget {
-  const cleanerssignup({super.key});
+class CleanersSignup extends StatefulWidget {
+  const CleanersSignup({super.key});
 
   @override
-  cleanerssignupState createState() => cleanerssignupState();
+  CleanersSignupState createState() => CleanersSignupState();
 }
 
-class cleanerssignupState extends State<cleanerssignup> {
+class CleanersSignupState extends State<CleanersSignup> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _cleanerIDController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
@@ -20,8 +19,10 @@ class cleanerssignupState extends State<cleanerssignup> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
+
   void register(BuildContext context) async {
-    // Get the values from the form fields
     String name = _nameController.text;
     String cleanerID = _cleanerIDController.text;
     String phoneNumber = _phoneNumberController.text;
@@ -29,7 +30,6 @@ class cleanerssignupState extends State<cleanerssignup> {
     String password = _passwordController.text;
     String confirmPassword = _confirmPasswordController.text;
 
-    // Validate the form fields
     if (name.isEmpty ||
         cleanerID.isEmpty ||
         phoneNumber.isEmpty ||
@@ -46,11 +46,21 @@ class cleanerssignupState extends State<cleanerssignup> {
     }
 
     try {
-      // Create a new user in Firebase Authentication
+      // Check if the name already exists in the Cleaners collection
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('Cleaners')
+          .where('name', isEqualTo: name)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        _showErrorSnackBar(context, 'Entered name already exists');
+        return;
+      }
+
+      // Proceed with registration if the name doesn't exist
       UserCredential customerCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
 
-      // Save user data to Firebase Firestore
       await FirebaseFirestore.instance
           .collection('Cleaners')
           .doc(customerCredential.user!.uid)
@@ -61,11 +71,9 @@ class cleanerssignupState extends State<cleanerssignup> {
         'email': email,
       });
 
-      // Navigate to the login page or any other destination
-      // Here, we are assuming there's a `LoginScreen` widget defined
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) =>  CleanersLogin()),
+        MaterialPageRoute(builder: (context) => CleanersLogin()),
       );
     } catch (e) {
       _showErrorSnackBar(context, 'Registration failed: $e');
@@ -118,7 +126,7 @@ class cleanerssignupState extends State<cleanerssignup> {
                     const Text(
                       "Cleaner's Signup",
                       style: TextStyle(
-                        color:  Color(0xFF111217),
+                        color: Color(0xFF111217),
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -128,7 +136,6 @@ class cleanerssignupState extends State<cleanerssignup> {
               ),
             ),
             Expanded(
-              // Background color for the remaining space
               child: SingleChildScrollView(
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: size.width * 0.1),
@@ -218,7 +225,7 @@ class cleanerssignupState extends State<cleanerssignup> {
                       SizedBox(height: size.height * 0.02),
                       TextField(
                         controller: _cleanerIDController,
-                        keyboardType: TextInputType.text ,
+                        keyboardType: TextInputType.text,
                         decoration: InputDecoration(
                           hintText: 'Cleaner ID NO.',
                           prefixIcon: Icon(Icons.credit_card),
@@ -246,10 +253,20 @@ class cleanerssignupState extends State<cleanerssignup> {
                       TextField(
                         controller: _passwordController,
                         keyboardType: TextInputType.visiblePassword,
-                        obscureText: true,
+                        obscureText: !_isPasswordVisible,
                         decoration: InputDecoration(
                           hintText: 'Password',
                           prefixIcon: Icon(Icons.lock),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isPasswordVisible = !_isPasswordVisible;
+                              });
+                            },
+                          ),
                           hintStyle: const TextStyle(
                             color: Color(0xFF111217),
                           ),
@@ -274,11 +291,20 @@ class cleanerssignupState extends State<cleanerssignup> {
                       TextField(
                         controller: _confirmPasswordController,
                         keyboardType: TextInputType.visiblePassword,
-                        obscureText: true,
+                        obscureText: !_isConfirmPasswordVisible,
                         decoration: InputDecoration(
                           hintText: 'Confirm Password',
                           prefixIcon: Icon(Icons.lock),
-                          alignLabelWithHint: true,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                              });
+                            },
+                          ),
                           hintStyle: const TextStyle(
                             color: Color(0xFF111217),
                           ),
@@ -346,7 +372,6 @@ class cleanerssignupState extends State<cleanerssignup> {
                           ElevatedButton(
                             onPressed: () {
                               register(context);
-                              // Handle signup logic here
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFF9C4B4),
@@ -393,7 +418,7 @@ class cleanerssignupState extends State<cleanerssignup> {
                                   Navigator.pushAndRemoveUntil(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) =>  CleanersLogin(),
+                                      builder: (context) => CleanersLogin(),
                                     ),
                                         (route) => false,
                                   );

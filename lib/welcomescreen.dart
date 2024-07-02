@@ -77,7 +77,7 @@ class WelcomeScreen extends StatelessWidget {
     Navigator.of(context).push(
     PageRouteBuilder(
     pageBuilder: (context, animation, secondaryAnimation) =>   CustomerLogin(),
-    transitionDuration: const Duration(milliseconds: 5000),
+    transitionDuration: const Duration(milliseconds: 900),
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
     final screenWidth = MediaQuery.of(context).size.width;
 

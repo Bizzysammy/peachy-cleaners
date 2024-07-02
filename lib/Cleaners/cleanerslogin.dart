@@ -8,11 +8,17 @@ import 'package:peachy/cleaners/cleanerssignup.dart';
 
 import '../customer/customerlogin.dart';
 
-class CleanersLogin extends StatelessWidget {
+class CleanersLogin extends StatefulWidget {
   CleanersLogin({Key? key}) : super(key: key);
 
+  @override
+  _CleanersLoginState createState() => _CleanersLoginState();
+}
+
+class _CleanersLoginState extends State<CleanersLogin> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isPasswordVisible = false;
 
   Future<void> login(BuildContext context, String email, String password) async {
     try {
@@ -149,7 +155,7 @@ class CleanersLogin extends StatelessWidget {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => const cleanerssignup()),
+                                MaterialPageRoute(builder: (context) => const CleanersSignup()),
                               );
                               // Add your onPressed logic here
                             },
@@ -219,11 +225,21 @@ class CleanersLogin extends StatelessWidget {
                     TextFormField(
                       controller: _passwordController,
                       keyboardType: TextInputType.visiblePassword,
-                      obscureText: true,
-                      decoration: const InputDecoration(
+                      obscureText: !_isPasswordVisible,
+                      decoration: InputDecoration(
                         hintText: 'Password',
-                        prefixIcon: Icon(Icons.lock),
-                        border: OutlineInputBorder(
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                        ),
+                        border: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(20)),
                         ),
                       ),
@@ -251,7 +267,7 @@ class CleanersLogin extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>  CleanerForgotPassword(),
+                            builder: (context) => CleanerForgotPassword(),
                           ),
                         );
                         // Navigate to forgot password page
